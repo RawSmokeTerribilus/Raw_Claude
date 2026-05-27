@@ -58,17 +58,3 @@ under MIT license. Each ported `SKILL.md` retains the original `author: Hermes A
 
 All new skills MUST follow `skills/meta/raw-claude-skill-authoring/SKILL.md`. It codifies
 the frontmatter shape, size limits, peer-matched structure, and verification checklist.
-
-## Remotes
-
-- Codeberg (primary): `git@codeberg.org:RawSmoke/Raw_Claude.git`
-- GitHub (mirror):    `git@github.com:RawSmokeTerribilus/Raw_Claude.git`
-
-Push to both on every release tag. SSH keys, not PATs — no token expiry surface.
-
-## Not in this repo
-
-- Homelab infra docs (`~/Raw_Vault/Hardening/`) — local + encrypted backups only, never
-  pushed to a public remote (OPSEC).
-- Secrets — `~/.claude/` may contain auth artifacts; see `.gitignore`.
-- `~/.claude/projects/` session logs — ephemeral.
