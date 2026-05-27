@@ -1,15 +1,152 @@
-{
-  "_comment": "Baseline ~/.claude/settings.json. Copy to ~/.claude/settings.json on first install or after a CLI nuke. Local overrides go in ~/.claude/settings.local.json.",
+// EXAMPLE Claude Code settings — copy to ~/.claude/settings.json on first install
+// or after a CLI nuke, then strip the // comments (real settings.json is strict JSON).
+//
+// Real file lives at ~/.claude/settings.json, OUTSIDE this repo. NEVER commit the real
+// file: it may end up containing tokens, passwords, internal IPs, and other secrets.
+// The repo's .gitignore blocks settings.json and settings.local.json defensively.
+//
+// Local overrides go in ~/.claude/settings.local.json (also gitignored).
+//
+// Security note: avoid embedding secrets in permissions.allow strings. If a command
+// needs a credential, source it from an env var or out-of-band auth (gh auth token,
+// keyring) — not from a literal in this file.
 
-  "autoUpdates": true,
+{
+  "model": "claude-opus-4-7",
+  "effortLevel": "high",
+  "editorMode": "normal",
+  "awaySummaryEnabled": false,
+  "remoteControlAtStartup": true,
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Hooks — the order in each event array matters: hooks fire in array order.
+  // SOUL injection should run early so context is available to subsequent
+  // hooks. Caveman activator runs after, so it sees the SOUL context.
+  // ─────────────────────────────────────────────────────────────────────────
   "hooks": {
     "SessionStart": [
       {
-        "matcher": "startup",
         "hooks": [
-          { "type": "command", "command": "~/Raw_Vault/Raw_Claude/hooks/inject-soul.sh" }
+          {
+            "type": "command",
+            "command": "~/Raw_Vault/Raw_Claude/hooks/inject-soul.sh",
+            "timeout": 5,
+            "statusMessage": "Injecting SOUL + USER charter..."
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ~/.claude/hooks/caveman-activate.js",
+            "timeout": 5,
+            "statusMessage": "Loading caveman mode..."
+          }
         ]
       }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ~/.claude/hooks/caveman-mode-tracker.js",
+            "timeout": 5,
+            "statusMessage": "Tracking caveman mode..."
+          }
+        ]
+      }
+    ]
+  },
+
+  "statusLine": {
+    "type": "command",
+    "command": "bash ~/.claude/hooks/caveman-statusline.sh"
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Plugins — install via the Claude Code UI; this block reflects which are
+  // enabled. Marketplace sources can be defined under extraKnownMarketplaces.
+  // ─────────────────────────────────────────────────────────────────────────
+  "enabledPlugins": {
+    "caveman@caveman": true
+  },
+  "extraKnownMarketplaces": {
+    "caveman": {
+      "source": {
+        "source": "github",
+        "repo": "JuliusBrussee/caveman"
+      }
+    }
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // MCP servers. Keep secrets OUT of this file — use ${env:VAR} indirection
+  // and export the underlying env var from your shell profile.
+  // ─────────────────────────────────────────────────────────────────────────
+  "mcpServers": {
+    "time": {
+      "command": "uvx",
+      "args": ["mcp-server-time"]
+    },
+    "filesystem_docs": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "~/Documents"]
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${env:GITHUB_PERSONAL_ACCESS_TOKEN}"
+      }
+    }
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Permissions. Each entry pre-authorizes a tool invocation pattern; without
+  // an allow entry, Claude Code prompts on every call.
+  //
+  // Anti-patterns:
+  //   1. Embedding passwords/tokens in command literals
+  //      (e.g. "Bash(curl -u admin:HUNTER2 ...)" — leak surface).
+  //   2. Blanket "Bash(*)" — defeats the permission model entirely.
+  //
+  // Prefer:
+  //   - Narrow patterns: "Bash(docker exec mycontainer *)"
+  //   - Whitelisted MCP tools: "mcp__github__list_issues"
+  //   - Env-sourced credentials inside the script you allow, not the literal.
+  // ─────────────────────────────────────────────────────────────────────────
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      // Read access to common safe paths
+      "Read(//home/<user>/**)",
+      "Read(//tmp/**)",
+      "Read(//var/log/**)",
+
+      // Diagnostics / read-only system inspection
+      "Bash(systemctl status *)",
+      "Bash(systemctl is-active *)",
+      "Bash(journalctl *)",
+      "Bash(docker ps *)",
+      "Bash(docker inspect *)",
+      "Bash(docker logs *)",
+      "Bash(ps *)",
+
+      // Specific container-scoped mutations (example)
+      "Bash(docker exec myapp-container php artisan *)",
+      "Bash(docker restart myapp-container)",
+
+      // gh CLI — token-free since gh handles auth itself
+      "Bash(gh *)",
+
+      // MCP tools (narrow allowlist)
+      "mcp__time__*",
+      "mcp__filesystem_docs__read_file",
+      "mcp__filesystem_docs__list_directory",
+      "mcp__github__list_issues",
+      "mcp__github__get_pull_request"
     ]
   }
 }

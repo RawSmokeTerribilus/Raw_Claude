@@ -17,5 +17,10 @@ auth.json
 .env
 .env.*
 
+# Real Claude Code settings (only the .template version is tracked)
+settings.json
+settings.local.json
+.mcp.json
+
 # Smoke-test transient output
 smoke-test.out
