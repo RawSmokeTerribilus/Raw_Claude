@@ -1,0 +1,21 @@
+# Local-only artifacts
+*.log
+*.bak
+*.swp
+.DS_Store
+
+# Obsidian workspace state (per-machine)
+.obsidian/workspace*
+.obsidian/cache
+
+# Anything explicitly secret
+secrets/
+*.key
+*.pem
+*.age
+auth.json
+.env
+.env.*
+
+# Smoke-test transient output
+smoke-test.out

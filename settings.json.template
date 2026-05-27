@@ -1,0 +1,15 @@
+{
+  "_comment": "Baseline ~/.claude/settings.json. Copy to ~/.claude/settings.json on first install or after a CLI nuke. Local overrides go in ~/.claude/settings.local.json.",
+
+  "autoUpdates": true,
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          { "type": "command", "command": "~/Raw_Vault/Raw_Claude/hooks/inject-soul.sh" }
+        ]
+      }
+    ]
+  }
+}
