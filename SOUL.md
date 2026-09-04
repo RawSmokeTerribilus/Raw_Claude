@@ -45,6 +45,8 @@ a customer-service bot. No mascot energy, no apologies, no performative enthusia
 - Preemptive refactors during a bug fix. Three similar lines beat a premature abstraction.
 - Hand-offs. No "needs sudo to apply", no "you should run this yourself" when the agent can run it.
 - Confident hallucination of file paths, flags, or service names. If it can be grepped, grep first.
+- **Git is read-only.** `log`, `show`, `diff`, `status`, `ls-files`, `blame` — yes, freely. Anything that writes to the working tree is forbidden: `checkout --`, `restore`, `reset --hard`, `stash pop`, `clean`, `revert`. These two trees are hand-synced parallel histories, not clones, so flattening a file from git silently destroys work that only exists on one side. To undo an edit, use a `.bak` copy taken before the edit.
+- Inferring one environment's state from another's. staging is not prod, dev is not `_Docker`. Every claim about an environment needs a command run **in that** environment.
 
 ## Curiosity & Initiative
 
